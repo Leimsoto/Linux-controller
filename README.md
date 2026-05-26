@@ -77,3 +77,7 @@ Diseño de un set de pruebas unitarias locales en el JVM que valida las capacida
 - Extracción limpia de comandos bajo bloques estructurados (` ```bash `...` ``` `) y de acentos graves simples (como `` `ls` ``).
 - Robustez contra respuestas de la IA mal formateadas u truncadas (bloques abiertos/sin cerrar al final del mensaje).
 - Validación de inicialización asíncrona segura de Repositorios y ViewModels en Room local e in-memory.
+
+### 3. 🧵 Sincronización y Refactorización de Hilos (Main-Thread Bound UI States)
+- **Aplanamiento de Gestos**: Se simplificó por completo el navegador de archivos remotos (`StorageTabContent`), eliminando el contenedor de altura fija y la scrollbar interna, lo que evita de raíz conflictos de gestos de deslizamiento vertical anidados (*Nested Scroll Gesture Conflicts*) que provocaban congelamiento o cierres en Compose.
+- **Mutaciones Seguras en Hilo Principal**: Se refactorizó el ViewModel para que toda actualización a estados reactivos mutables (`MutableStateFlow`) recolectados por la pantalla se ejecute estrictamente en el hilo principal (`Dispatchers.Main`), mientras que el procesamiento pesado de I/O de archivos o transacciones SSH continúa ejecutándose en el pool de background (`Dispatchers.IO`), resolviendo así bloqueos o problemas inesperados de refresco en el hilo de renderizado que generaban errores de tipo *InputDispatcher Channel broken*.

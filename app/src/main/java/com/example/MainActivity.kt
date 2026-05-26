@@ -2022,16 +2022,16 @@ fun StorageTabContent(viewModel: MainViewModel) {
         }
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // --- STATUS TRANSFFER HUD BAR ---
         storageStatus?.let { status ->
-            item {
-                Card(
+            Card(
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFDDE1FF)),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp)
@@ -2073,12 +2073,10 @@ fun StorageTabContent(viewModel: MainViewModel) {
                         )
                     }
                 }
-            }
         }
 
         // --- SECTION 1: STORAGE OVERVIEW ---
-        item {
-            Row(
+        Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -2181,11 +2179,9 @@ fun StorageTabContent(viewModel: MainViewModel) {
                     }
                 }
             }
-        }
 
         // --- SECTION 2: REMOTE PC BROWSING ---
-        item {
-            Card(
+        Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -2301,7 +2297,6 @@ fun StorageTabContent(viewModel: MainViewModel) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(max = 280.dp)
                                 .border(1.dp, Color(0xFFC7C6D0), RoundedCornerShape(14.dp))
                                 .background(Color(0xFFF9F9FF))
                                 .padding(6.dp)
@@ -2321,11 +2316,11 @@ fun StorageTabContent(viewModel: MainViewModel) {
                                     color = Color.Gray
                                 )
                             } else {
-                                LazyColumn(
+                                Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    items(remoteFiles) { file ->
+                                    remoteFiles.forEach { file ->
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -2405,11 +2400,9 @@ fun StorageTabContent(viewModel: MainViewModel) {
                     }
                 }
             }
-        }
 
         // --- SECTION 3: ANDROID LOCAL TRANSFERS TRACK ---
-        item {
-            Card(
+        Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -2530,7 +2523,6 @@ fun StorageTabContent(viewModel: MainViewModel) {
                     }
                 }
             }
-        }
     }
 }
 

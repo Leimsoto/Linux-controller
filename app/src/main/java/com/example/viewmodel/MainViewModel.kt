@@ -458,12 +458,14 @@ class MainViewModel(
     }
 
     fun loadLocalFiles(localDir: java.io.File) {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                if (!localDir.exists()) {
-                    localDir.mkdirs()
+                val files = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    if (!localDir.exists()) {
+                        localDir.mkdirs()
+                    }
+                    localDir.listFiles()?.toList() ?: emptyList()
                 }
-                val files = localDir.listFiles()?.toList() ?: emptyList()
                 _localFiles.value = files.sortedByDescending { it.lastModified() }
             } catch (e: Throwable) {
                 e.printStackTrace()
@@ -542,9 +544,12 @@ class MainViewModel(
     }
 
     fun deleteLocalFile(file: java.io.File, localDirForRefresh: java.io.File) {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                if (file.exists() && file.delete()) {
+                val success = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    file.exists() && file.delete()
+                }
+                if (success) {
                     _storageStatus.value = "Archivo local eliminado: ${file.name}"
                     loadLocalFiles(localDirForRefresh)
                 } else {
