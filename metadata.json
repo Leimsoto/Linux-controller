@@ -1,0 +1,6 @@
+{
+  "name": "Linux Remote Control",
+  "description": "Control your Linux PC remotely using SSH. Execute predefined key shortcuts and custom commands from a beautiful responsive panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
