@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -21,6 +22,10 @@ class MainViewModel(
     private val repository: RemoteControlRepository,
     private val context: android.content.Context
 ) : ViewModel() {
+
+    private val errorHandler = CoroutineExceptionHandler { _, throwable ->
+        android.util.Log.e("MainViewModel", "Crash prevented: unhandled coroutine exception", throwable)
+    }
 
     // --- Gemini config options via SharedPreferences ---
     private val sharedPrefs = context.getSharedPreferences("gemini_prefs", android.content.Context.MODE_PRIVATE)
@@ -120,7 +125,7 @@ class MainViewModel(
         _isAiLoading.value = true
         _aiError.value = null
 
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             try {
                 val conversationHistory = if (expandedHistory.size > 12) {
                     expandedHistory.takeLast(12)
@@ -251,7 +256,7 @@ class MainViewModel(
 
     fun fetchTelemetry(profile: PCProfile) {
         telemetryJob?.cancel()
-        telemetryJob = viewModelScope.launch {
+        telemetryJob = viewModelScope.launch(errorHandler) {
             _isTelemetryLoading.value = true
             try {
                 val stats = SshManager.getRemoteTelemetry(profile)
@@ -266,10 +271,10 @@ class MainViewModel(
 
     init {
         // Ensure default mock commands or predefines are set on DB start
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             repository.ensureDefaultCommands()
         }
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             activeProfile.collect { profile ->
                 if (profile != null) {
                     fetchTelemetry(profile)
@@ -282,7 +287,7 @@ class MainViewModel(
 
     // Database Actions
     fun saveProfile(profile: PCProfile) {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             if (profile.id == 0) {
                 val newId = repository.insertProfile(profile)
                 // If this is the only profile, automatically make it default
@@ -296,7 +301,7 @@ class MainViewModel(
     }
 
     fun deleteProfile(profile: PCProfile) {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             repository.deleteProfile(profile)
             // If we deleted the active profile, reset default
             if (profile.isDefault && allProfiles.value.isNotEmpty()) {
@@ -309,14 +314,14 @@ class MainViewModel(
     }
 
     fun selectActiveProfile(profile: PCProfile) {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             repository.setProfileDefault(profile)
             _connectionTestResult.value = null // Clear old test results
         }
     }
 
     fun addQuickCommand(name: String, code: String, category: String, icon: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             val cmd = QuickCommand(
                 name = name,
                 commandCode = code,
@@ -328,14 +333,14 @@ class MainViewModel(
     }
 
     fun deleteQuickCommand(command: QuickCommand) {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             repository.deleteCommand(command)
         }
     }
 
     // Remote Actions
     fun testConnection(profile: PCProfile) {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             _isConnecting.value = true
             _connectionTestResult.value = null
             
@@ -366,7 +371,7 @@ class MainViewModel(
             return
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             _isExecuting.value = true
             
             addTerminalLog(
@@ -439,7 +444,7 @@ class MainViewModel(
             _storageStatus.value = "Selecciona un perfil activo primero."
             return
         }
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             _isBrowsing.value = true
             _storageStatus.value = "Listando archivos de ${target.name}..."
             try {
@@ -458,7 +463,7 @@ class MainViewModel(
     }
 
     fun loadLocalFiles(localDir: java.io.File) {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             try {
                 val files = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                     if (!localDir.exists()) {
@@ -479,7 +484,7 @@ class MainViewModel(
             _storageStatus.value = "Selecciona un perfil activo primero."
             return
         }
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             _isBrowsing.value = true
             _storageStatus.value = "Descargando ${remoteFile.name}..."
             try {
@@ -516,7 +521,7 @@ class MainViewModel(
             _storageStatus.value = "Selecciona un perfil activo primero."
             return
         }
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             _isBrowsing.value = true
             _storageStatus.value = "Subiendo archivo a PC: $fileName..."
             try {
@@ -544,7 +549,7 @@ class MainViewModel(
     }
 
     fun deleteLocalFile(file: java.io.File, localDirForRefresh: java.io.File) {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler) {
             try {
                 val success = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                     file.exists() && file.delete()
